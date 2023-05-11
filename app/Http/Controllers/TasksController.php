@@ -29,19 +29,27 @@ class TasksController extends Controller
     
     public function create()
     {
+        if (\Auth::check() == false)
+        {
+            return redirect("/");    
+        }
+        
         $task = new Task;
         $user = \Auth::user();
         $task->user_id = $user->id;
         
         return view("tasks.create", [
             "task" => $task,
-        ]); 
-        
-        
+        ]);
     }
     
     public function show($id)
     {
+        if (\Auth::id() <> $id)
+        {
+            return redirect("/");
+        }
+        
         $user = User::find($id);
         $tasks = $user->tasks()->orderBy("created_at", "desc")->paginate(10);
 
@@ -53,6 +61,11 @@ class TasksController extends Controller
     
     public function store(Request $request)
     {
+        if (\Auth::check() == false)
+        {
+            return redirect("/");    
+        }
+        
         $this->validate($request, [
             'content' => 'required|max:191',
             "status" => "required|max:191",
@@ -69,11 +82,15 @@ class TasksController extends Controller
         return redirect()->back();
     }
     
+    // $id = Task.id
     public function edit($id)
     {
-        $user = \Auth::user();
         $task = Task::find($id);
-        
+        if (\Auth::id() <> $task->user_id)
+        {
+            return redirect("/");
+        }
+        $user = \Auth::user();
         // dd($user,$task);
         return view("tasks.edit", [
             "task" => $task, 
@@ -81,9 +98,15 @@ class TasksController extends Controller
         ]);
     }
     
+    //$id = Task.id
     public function update(Request $request, $id)
     {
         $task = Task::find($id);
+        if (\Auth::id()<> $task->user_id)
+        {
+            return redirect("/");    
+        }
+        
         //dd($id,$task,$request);
         $task->content = $request->content;
         $task->status = $request->status;
